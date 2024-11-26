@@ -25,9 +25,14 @@ const PrintersPage = () => {
         printers,
         loading,
         error,
+        errors,
+        isFetchingStatus,
+        statusMessage,
+        printerStatus,
         createPrinter,
         updatePrinter,
         deletePrinter,
+        fetchPrinterStatus,
     } = usePrinters()
     const [name, setName] = useState('')
     const [printJobId, setPrintJobId] = useState('')
@@ -67,9 +72,6 @@ const PrintersPage = () => {
         setPrintJobId('')
         setEditId(null)
     }
-
-    if (loading) return <CircularProgress />
-    if (error) return <Typography color="error">{error}</Typography>
 
     return (
         <>
@@ -170,7 +172,46 @@ const PrintersPage = () => {
                                                 )}
                                             </List>
                                         </Paper>
+                                        <Paper sx={{ p: 3, mb: 3 }}>
+                                            <Button
+                                                variant="contained"
+                                                onClick={fetchPrinterStatus}
+                                                disabled={isFetchingStatus}>
+                                                {isFetchingStatus
+                                                    ? 'Fetching...'
+                                                    : 'Check Printer Status'}
+                                            </Button>
+                                            {statusMessage && (
+                                                <Typography sx={{ mt: 2 }}>
+                                                    {statusMessage}
+                                                </Typography>
+                                            )}
+                                            {printerStatus && (
+                                                <List>
+                                                    {printerStatus.map(
+                                                        (status, index) => (
+                                                            <ListItem
+                                                                key={index}>
+                                                                <ListItemText
+                                                                    primary={
+                                                                        status.name
+                                                                    }
+                                                                    secondary={
+                                                                        status.status
+                                                                    }
+                                                                />
+                                                            </ListItem>
+                                                        ),
+                                                    )}
+                                                </List>
+                                            )}
+                                        </Paper>
                                     </>
+                                )}
+                                {errors && (
+                                    <Typography color="error" variant="body2">
+                                        {errors}
+                                    </Typography>
                                 )}
                             </Container>
                         </div>

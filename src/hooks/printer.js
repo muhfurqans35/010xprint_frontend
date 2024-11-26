@@ -1,4 +1,3 @@
-// hooks/usePrinters.js
 import { useState } from 'react'
 import axios from '@/lib/axios'
 import useSWR from 'swr'
@@ -7,6 +6,9 @@ export const usePrinters = () => {
     const [errors, setErrors] = useState([])
     const [status, setStatus] = useState(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [printerStatus, setPrinterStatus] = useState(null)
+    const [statusMessage, setStatusMessage] = useState('')
+    const [isFetchingStatus, setIsFetchingStatus] = useState(false)
 
     // Initialize CSRF protection
     const initializeCsrf = async () => {
@@ -17,6 +19,34 @@ export const usePrinters = () => {
     const { data: printers, error, mutate } = useSWR('/api/printers', url =>
         axios.get(url).then(res => res.data),
     )
+
+    // Function to fetch printer status from Laravel
+    const fetchPrinterStatus = async () => {
+        setIsFetchingStatus(true)
+        setStatusMessage('')
+
+        try {
+            await initializeCsrf()
+
+            const response = await axios.post(
+                '/api/printer-status',
+                {},
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                },
+            )
+
+            setPrinterStatus(response.data.data)
+            setStatusMessage(`Success: ${response.data.message}`)
+        } catch (error) {
+            console.error('Error fetching printer status:', error)
+            setStatusMessage('Error: Unable to fetch printer status')
+        } finally {
+            setIsFetchingStatus(false)
+        }
+    }
 
     const createPrinter = async printerData => {
         setIsSubmitting(true)
@@ -114,11 +144,16 @@ export const usePrinters = () => {
     return {
         printers,
         errors,
+        error,
         status,
+        printerStatus,
+        statusMessage,
+        isFetchingStatus,
         isLoading: !error && !printers,
         isSubmitting,
         createPrinter,
         updatePrinter,
         deletePrinter,
+        fetchPrinterStatus,
     }
 }
